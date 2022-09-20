@@ -1,0 +1,17 @@
+version: '3'
+services:
+  crawler:
+    image: sonarq-crawler:latest
+    tty: true
+    environment:
+      SONARQUBE_TOKEN: "squ_a4c1bd1d9be8613d1179234e634d7541af960f2b"
+      INFLUX_TOKEN: "owNcFjQ_CYRqF17x8Nlt0ByUdGg4xMar51ziPJ7murTdoptCvy6BBwUYwHWL7JdPmWD7qsc4y1FgKRqGrCrPVw=="
+      INFLUX_SERVER: "http://172.17.0.1:8086"
+      ORG_NAME: "mainorg"
+      BUCKET_NAME: "sonarqube_kpi"
+      SONARQUBE_SERVER: "https://sonarqube.x.com.vn"
+
+
+
+
+
