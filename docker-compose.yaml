@@ -9,5 +9,5 @@ services:
       INFLUX_SERVER: "http://172.17.0.1:8086"
       ORG_NAME: "mainorg"
       BUCKET_NAME: "sonarqube_kpi"
-      SONARQUBE_SERVER: "https://sonarqube.x.com.vn"
+      SONARQUBE_SERVER: "https://sonarqube.biplus.com.vn"
 
