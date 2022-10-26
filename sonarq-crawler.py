@@ -20,7 +20,7 @@ influx_token = "owNcFjQ_CYRqF17x8Nlt0ByUdGg4xMar51ziPJ7murTdoptCvy6BBwUYwHWL7JdP
 influx_server = "http://172.17.0.1:8086"
 org_name = "mainorg"
 bucket_name = "sonarqube_kpi"
-sonarqube_server = "https://sonarqube-dev.biplus.com.vn"
+sonarqube_server = "http://192.168.3.101:9001"
 
 #Get data from url and convert to JSON
 def get_data(url, token):
@@ -118,7 +118,7 @@ def metric_crawler():
     project_name = get_json("name", components)
     for branch in list_branch:
       branch_name = get_json("name", branch)
-      list_metric = ["alert_status", "ncloc_language_distribution", "ncloc", "false_positive_issues", "blocker_violations", "critical_violations", "major_violations", "minor_violations", "info_violations", "open_issues", "confirmed_issues", "reopened_issues", "code_smells", "sqale_rating", "sqale_index", "bugs", "vulnerabilities", "security_rating", "classes", "files", "lines", "functions", "coverage", "lines_to_cover", "skipped_tests", "tests", "test_execution_time", "test_errors", "test_failures", "test_success_density", "duplicated_lines_density", "duplicated_files", "duplicated_blocks", "duplicated_lines"]
+      list_metric = ["alert_status", "ncloc_language_distribution", "ncloc", "false_positive_issues", "blocker_violations", "critical_violations", "major_violations", "minor_violations", "info_violations", "open_issues", "confirmed_issues", "reopened_issues", "code_smells", "sqale_rating", "sqale_index", "bugs", "vulnerabilities", "security_rating", "coverage", "tests", "duplicated_lines_density", "duplicated_files", "duplicated_blocks", "duplicated_lines"]
       for metric_key in list_metric:
         data = get_metric(project_key, branch_name, metric_key, sonarqube_token)
         if len(data["component"]["measures"]) == 0:
@@ -229,7 +229,7 @@ def rule_crawler():
 
 
 if __name__ == '__main__':
-  # branch_crawler()
+  branch_crawler()
   metric_crawler()
-  # event_crawler()
-  # rule_crawler()
+  event_crawler()
+  rule_crawler()
