@@ -109,3 +109,14 @@ t1 = from(bucket: "sonarqube_kpi")
 |> keep(columns: ["_time","project_key", "bugs_bugs", "ncloc_ncloc","code_smells_code_smells","sqale_index_sqale_index"])
 |> rename(columns: {project_key: "project", bugs_bugs: "Số bug", code_smells_code_smells: "Số code lởm", ncloc_ncloc: "Số dòng", sqale_index_sqale_index: "Nợ kỹ thuật"})
 |> yield(name: "last")
+
+
+
+import "date"
+from(bucket: "gitlab")
+  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+  |> filter(fn: (r) => r["_measurement"] == "1")
+  |> filter(fn: (r) => r["_field"] == "commit_id")
+  |> keep(columns: ["created_at"])
+  |> map(fn:(r) => ({r with "created_at": time(v: r["created_at"])}))
+  |> filter(fn: (r) => r["created_at"] < date.sub(d: 48h, from: now()))
