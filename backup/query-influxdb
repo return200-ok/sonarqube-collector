@@ -1,0 +1,122 @@
+
+t1 =
+    from(bucket: "sonarqube_kpi")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "bugs")
+    |> filter(fn: (r) => r["_field"] == "bugs")
+    |> sort()
+    |> yield(name: "sort")
+
+t2 =
+    from(bucket: "sonarqube_kpi")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "ncloc")
+    |> filter(fn: (r) => r["_field"] == "ncloc")
+    |> sort()
+    |> yield(name: "sort")
+
+join(tables: {t1: t1, t2: t2}, on: ["_time"])
+
+
+
+###
+from(bucket: "sonarqube_kpi")
+    |> range(start: -24h, stop: now())
+    |> filter(fn: (r) => r._measurement == "bugs" and r._field == "bugs")
+    |> group(columns: ["project_key"])
+    |> last()
+    |> group()
+    |> keep(columns: ["_value", "project_key", "project_name"])
+
+
+###
+t1 =
+    from(bucket: "sonarqube_kpi")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "bugs")
+    |> filter(fn: (r) => r["_field"] == "bugs")
+
+t2 =
+    from(bucket: "sonarqube_kpi")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "ncloc")
+    |> filter(fn: (r) => r["_field"] == "ncloc")
+
+join(tables: {t1: t1, t2: t2}, on: ["project_key"])
+
+
+###
+from(bucket: "sonarqube_kpi")
+    |> range(start: -24h, stop: now())
+    |> filter(fn: (r) => r._measurement == "bugs" and r._field == "bugs")
+    |> map(fn: (r) => ({ r with _field: if r._field == "bugs" then "số bug" else "" }) )
+    |> group(columns: ["project_key"])
+    |> keep(columns: ["_value", "_field", "project_name", "_time"])
+
+###
+from(bucket: "sonarqube_kpi")
+    |> range(start: -24h, stop: now())
+    |> filter(fn: (r) => r["_measurement"] == "bugs" or r["_measurement"] == "code_smells" or r["_measurement"] == "ncloc" or r["_measurement"] == "sqale_index")
+    |> filter(fn: (r) => r["_field"] == "bugs" or r["_field"] == "code_smells" or r["_field"] == "ncloc" or r["_field"] == "sqale_index")
+    |> filter(fn: (r) => r["project_key"] == "Test")
+    |> map(fn: (r) => ({ r with _field: if r._field == "bugs" then "số  bug" else if r._field == "ncloc" then "số  dòng code" else if r._field == "code_smells" then "số  code lởm" else if r._field == "sqale_index" then "nợ kỹ thuật" else "" }) )
+    |> group(columns: ["project_key"])
+    |> keep(columns: ["_value", "_field", "project_name", "_time"])
+
+
+###
+from(bucket: "sonarqube_kpi")
+    |> range(start: -24h, stop: now())
+    |> filter(fn: (r) => r["_measurement"] == "bugs" or r["_measurement"] == "code_smells" or r["_measurement"] == "ncloc" or r["_measurement"] == "sqale_index")
+    |> filter(fn: (r) => r["_field"] == "bugs" or r["_field"] == "code_smells" or r["_field"] == "ncloc" or r["_field"] == "sqale_index")
+    |> filter(fn: (r) => r["project_key"] == "Test")
+    |> map(fn: (r) => ({ r with _field: if r._field == "bugs" then "số  bug" else if r._field == "ncloc" then "số  dòng code" else if r._field == "code_smells" then "số  code lởm" else if r._field == "sqale_index" then "nợ kỹ thuật" else "" }) )
+    |> map(fn: (r) => ({ r with _field: if r._field == "sqale_index" then r._value == int(v: r._value) % 60 else r._value ==""}))
+    |> group(columns: ["project_key"])
+    |> keep(columns: ["_value", "_field", "project_name", "project_key", "_time"])
+
+###
+t1 =
+    from(bucket: "sonarqube_kpi")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "bugs")
+    |> filter(fn: (r) => r["_field"] == "bugs")
+
+t2 =
+    from(bucket: "sonarqube_kpi")
+    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+    |> filter(fn: (r) => r["_measurement"] == "ncloc")
+    |> filter(fn: (r) => r["_field"] == "ncloc")
+
+join(tables: {t1: t1, t2: t2}, on: ["project_key"])
+  |> pivot(rowKey:["project_key"], columnKey: ["_field_t1"], valueColumn: "_value_t1")
+
+
+t1 = from(bucket: "sonarqube_kpi")
+|> range(start: -3m)
+|> filter(fn: (r) => r["_measurement"] == "ncloc" or r["_measurement"] == "bugs" or r["_measurement"] == "code_smells" or r["_measurement"] == "sqale_index")
+|> pivot(rowKey: ["project_key","_time"], columnKey: ["_field","_measurement"], valueColumn: "_value")
+|> keep(columns: ["_time","project_key", "bugs_bugs", "ncloc_ncloc","code_smells_code_smells","sqale_index_sqale_index"])
+|> map(fn: (r) => ({ r with _field: if r._field == "bugs_bugs" then "số  bug" else if r._field == "ncloc_ncloc" then "số  dòng code" else if r._field == "code_smells_code_smells" then "số  code lởm" else if r._field == "sqale_index_sqale_index" then "nợ kỹ thuật" else "" }) )
+|> yield(name: "last")
+
+
+###
+t1 = from(bucket: "sonarqube_kpi")
+|> range(start: -3m)
+|> filter(fn: (r) => r["_measurement"] == "ncloc" or r["_measurement"] == "bugs" or r["_measurement"] == "code_smells" or r["_measurement"] == "sqale_index")
+|> pivot(rowKey: ["project_key","_time"], columnKey: ["_field","_measurement"], valueColumn: "_value")
+|> keep(columns: ["_time","project_key", "bugs_bugs", "ncloc_ncloc","code_smells_code_smells","sqale_index_sqale_index"])
+|> rename(columns: {project_key: "project", bugs_bugs: "Số bug", code_smells_code_smells: "Số code lởm", ncloc_ncloc: "Số dòng", sqale_index_sqale_index: "Nợ kỹ thuật"})
+|> yield(name: "last")
+
+
+
+import "date"
+from(bucket: "gitlab")
+  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+  |> filter(fn: (r) => r["_measurement"] == "1")
+  |> filter(fn: (r) => r["_field"] == "commit_id")
+  |> keep(columns: ["created_at"])
+  |> map(fn:(r) => ({r with "created_at": time(v: r["created_at"])}))
+  |> filter(fn: (r) => r["created_at"] < date.sub(d: 48h, from: now()))
