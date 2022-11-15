@@ -1,26 +1,25 @@
+import json
+import logging
 import os
+from datetime import datetime, timedelta
 from os import environ
 from time import time
-import json
+
 import requests
-from datetime import datetime
+import rfc3339
+from dotenv import load_dotenv
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import ASYNCHRONOUS
 
+# Load env
+load_dotenv()
 
-# sonarqube_token = os.environ.get('SONARQUBE_TOKEN')
-# influx_token = os.environ.get('INFLUX_TOKEN')
-# influx_server = os.environ.get('INFLUX_SERVER')
-# org_name = os.environ.get('ORG_NAME')
-# bucket_name = os.environ.get('BUCKET_NAME')
-# sonarqube_server = os.environ.get('SONARQUBE_SERVER')
-
-sonarqube_token = "squ_af1e521e19aef5c5de1cb6df89adf3cbb3a9759e"
-influx_token = "KlXfBqa0uSGs0icfE-3g8FsQAoC9hx_QeDsxE3pn0p9wWWLn0bzDZdSmrOijoTA_Tr2MGPnF-LxZl-Nje8YJGQ=="
-influx_server = "http://192.168.3.101:8086"
-org_name = "org"
-bucket_name = "sonarqube_kpi"
-sonarqube_server = "http://192.168.3.101:9001"
+sonarqube_token = os.getenv('INFLUX_TOKEN')
+influx_token = os.getenv('INFLUX_TOKEN')
+influx_server = os.getenv('INFLUX_DB')
+org_name = os.getenv('ORG_NAME')
+bucket_name = os.getenv('BUCKET_NAME')
+sonarqube_server = os.getenv('SONARQUBE_URL')
 
 #Get data from url and convert to JSON
 def get_data(url, token):
@@ -58,7 +57,7 @@ def get_event(component, branch, token):
 def put_event(project_key, project_name, branch_name, key, date, project_version):
   client = InfluxDBClient(url=influx_server, token=influx_token, org=org_name)
 
-  kpi = [{
+  data_point = [{
     "measurement": project_key,
     "tags": {
       "project_name": project_name,
@@ -72,8 +71,8 @@ def put_event(project_key, project_name, branch_name, key, date, project_version
     }
   }]
   write_api = client.write_api(write_options=ASYNCHRONOUS)
-  write_api.write(bucket_name, org_name, kpi)
-  print ("write ", kpi," to bucket "+bucket_name)
+  write_api.write(bucket_name, org_name, data_point)
+  logging.info("write "+str(data_point)+" to bucket "+bucket_name)
 
 #Put event for each project
 def event_crawler():
